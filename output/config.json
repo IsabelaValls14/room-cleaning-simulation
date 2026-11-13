@@ -1,0 +1,101 @@
+{
+  "sim1-local_search": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 1,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "local_search",
+    "seed": 0
+  },
+  "sim1-zigzag": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 1,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "zigzag",
+    "seed": 0
+  },
+  "sim1-random": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 1,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "random",
+    "seed": 0
+  },
+  "sim2-local_search-n2": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 2,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "local_search",
+    "seed": 0
+  },
+  "sim2-local_search-n4": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 4,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "local_search",
+    "seed": 0
+  },
+  "sim2-local_search-n8": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 8,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "local_search",
+    "seed": 0
+  },
+  "sim2-local_search-n16": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 16,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "local_search",
+    "seed": 0
+  },
+  "sim2-zigzag-n4": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 4,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "zigzag",
+    "seed": 0
+  },
+  "sim2-random-n4": {
+    "rows": 20,
+    "cols": 20,
+    "dirty_fraction": 0.3,
+    "locked_fraction": 0.1,
+    "n_agents": 4,
+    "battery": 250,
+    "max_steps": 1000,
+    "strategy": "random",
+    "seed": 0
+  }
+}
