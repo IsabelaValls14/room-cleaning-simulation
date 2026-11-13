@@ -12,7 +12,7 @@ from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Tabl
 OUTPUT = Path(__file__).parent / "output"
 REPORT = OUTPUT / "report.pdf"
 VIDEO_URL = "https://drive.google.com/file/d/1rTucZkD9xcOqsQbjx_CtyDzfxDSlZOeA/view?usp=sharing"
-CODE_URL = "[Code repository URL - to be added after publishing]"
+CODE_URL = "https://github.com/IsabelaValls14/room-cleaning-simulation"
 AGENT_COUNTS = (1, 2, 4, 8, 16)
 
 STYLES = getSampleStyleSheet()
