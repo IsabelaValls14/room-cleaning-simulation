@@ -1,4 +1,4 @@
-"""Records a side-by-side MP4 of one Simulation 1 run and one Simulation 2 run on the same kind of room."""
+"""Side-by-side MP4s: one Simulation 1 run (1 agent) next to one Simulation 2 run (N agents), per trajectory type."""
 
 from dataclasses import replace
 from pathlib import Path
@@ -7,42 +7,54 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
 from matplotlib import animation  # noqa: E402
 from matplotlib.colors import ListedColormap  # noqa: E402
 
 from cleaner import Strategy  # noqa: E402
-from room import CLEAN, DIRTY, LOCKED  # noqa: E402
 from simulation import CleaningSimulation, SimConfig  # noqa: E402
 
-OUTPUT = Path(__file__).parent / "output"
-SEED = 0
-SIM1 = replace(SimConfig(), n_agents=1, strategy=Strategy.LOCAL_SEARCH, seed=SEED)
-SIM2 = replace(SimConfig(), n_agents=4, strategy=Strategy.LOCAL_SEARCH, seed=SEED)
-# Colors: clean = white, dirty = brown, locked = black.
-CMAP = ListedColormap(["#ffffff", "#8b5a2b", "#222222"])
+CMAP = ListedColormap(["#ffffff", "#8b5a2b"])  # clean = white, dirty = brown
+FPS = 5
 
 
-def record(config: SimConfig):
-    sim = CleaningSimulation(config, record=True)
-    result = sim.run()
-    return sim, result
+def _cells(frame, cols: int, rows: int) -> np.ndarray:
+    grid = np.zeros(rows * cols, dtype=int)
+    for n in frame.dirty:
+        grid[n] = 1
+    return grid.reshape(rows, cols)
 
 
-def main() -> None:
-    OUTPUT.mkdir(exist_ok=True)
-    sim1, result1 = record(SIM1)
-    sim2, result2 = record(SIM2)
-    frames_total = max(len(sim1.frames), len(sim2.frames))
+def _agent_xy(frame, cols: int) -> tuple[list[float], list[float]]:
+    """Agents on the same cell are drawn side by side, so every agent stays visible."""
+    xs, ys, seen = [], [], {}
+    for node in frame.agents:
+        k = seen.get(node, 0)
+        seen[node] = k + 1
+        row, col = divmod(node, cols)
+        xs.append(col + 0.22 * k)
+        ys.append(row)
+    return xs, ys
+
+
+def render_side_by_side(left: SimConfig, right: SimConfig, path: Path) -> None:
+    left_sim = CleaningSimulation(left, record=True)
+    right_sim = CleaningSimulation(right, record=True)
+    left_result = left_sim.run()
+    right_result = right_sim.run()
+    frames_total = max(len(left_sim.frames), len(right_sim.frames))
+    rows, cols = left.rows, left.cols
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6.2))
-    titles = [
-        f"Simulation 1: 1 agent (clean in {result1.time_to_clean} ticks)",
-        f"Simulation 2: 4 agents (clean in {result2.time_to_clean} ticks)",
-    ]
+    panels = (
+        (ax1, left_sim, f"Simulation 1: {left.n_agents} agent (clean in {left_result.time_to_clean} ticks)"),
+        (ax2, right_sim, f"Simulation 2: {right.n_agents} agents (clean in {right_result.time_to_clean} ticks)"),
+    )
     artists = []
-    for ax, sim, title in ((ax1, sim1, titles[0]), (ax2, sim2, titles[1])):
-        image = ax.imshow(sim.frames[0].cells, cmap=CMAP, vmin=0, vmax=2, interpolation="nearest")
-        dots, = ax.plot([], [], "o", color="tab:blue", markersize=9, markeredgecolor="white")
+    for ax, sim, title in panels:
+        image = ax.imshow(_cells(sim.frames[0], cols, rows), cmap=CMAP, vmin=0, vmax=1,
+                          interpolation="nearest", extent=(-0.5, cols - 0.5, rows - 0.5, -0.5))
+        dots, = ax.plot([], [], "o", color="tab:blue", markersize=9, markeredgecolor="white", linestyle="")
         ax.set_title(title)
         ax.set_xticks([])
         ax.set_yticks([])
@@ -51,15 +63,27 @@ def main() -> None:
     def update(index: int):
         for image, dots, sim in artists:
             frame = sim.frames[min(index, len(sim.frames) - 1)]
-            image.set_data(frame.cells)
-            dots.set_data([c for _, c in frame.agents], [r for r, _ in frame.agents])
-        fig.suptitle(f"Tick {min(index, frames_total - 1)}   (white = clean, brown = dirty, black = locked, blue = agent)")
+            image.set_data(_cells(frame, cols, rows))
+            dots.set_data(*_agent_xy(frame, cols))
+        fig.suptitle(
+            f"{left.strategy.value} strategy, tick {min(index, frames_total - 1)}   "
+            "(white = clean, brown = dirty, blue = agent)"
+        )
         return []
 
-    anim = animation.FuncAnimation(fig, update, frames=frames_total, interval=60, blit=False)
-    anim.save(OUTPUT / "simulation.mp4", writer=animation.FFMpegWriter(fps=15, bitrate=1800), dpi=110)
-    print(f"Saved {OUTPUT / 'simulation.mp4'} ({frames_total} ticks)")
+    anim = animation.FuncAnimation(fig, update, frames=frames_total, interval=1000 // FPS, blit=False)
+    anim.save(path, writer=animation.FFMpegWriter(fps=FPS, bitrate=1800), dpi=110)
+    plt.close(fig)
 
 
-if __name__ == "__main__":
-    main()
+def write_videos(base: SimConfig, many_agents: int, output: Path) -> list[Path]:
+    """One video per trajectory type, all on the same grid, dirt seed and start cell."""
+    output.mkdir(parents=True, exist_ok=True)
+    paths = []
+    for strategy in Strategy:
+        left = replace(base, n_agents=1, strategy=strategy)
+        right = replace(base, n_agents=many_agents, strategy=strategy)
+        path = output / f"simulation-{strategy.value}.mp4"
+        render_side_by_side(left, right, path)
+        paths.append(path)
+    return paths
